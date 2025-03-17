@@ -1,0 +1,141 @@
+body {
+    font-family: 'Noto Sans KR', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* 상단 메뉴 스타일링 */
+.subMenu {
+    display: flex;
+    justify-content: space-around;
+    gap: 30px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid #eee;
+    padding: 0 0 15px 0;
+    list-style-type: none;
+}
+
+/* 링크 스타일링 */
+.subMenu a {
+    text-decoration: none;
+    color: #333;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.subMenu a:hover {
+    color: #09E0D0;
+}
+
+.tab {
+    font-size: 16px;
+    font-weight: 500;
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    cursor: pointer;
+}
+
+.tab::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: #09E0D0;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.tab:hover::after,
+.tab.active::after {
+    transform: scaleX(1);
+}
+
+/* 테이블 스타일링 */
+table {
+    width: 70%;
+    margin: 30px auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+h3 {
+    width: 70%;  /* 테이블과 같은 너비 */
+    margin: 30px auto;  /* 테이블과 같은 마진 */
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+}
+
+td {
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+    vertical-align: middle;
+}
+
+td:first-child {
+    font-weight: 500;
+    background-color: #f8f9fa;
+    width: 30%;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+/* 금액 표시 스타일 */
+td p {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0788e6;
+    margin: 0;
+}
+
+/* 버튼 스타일링 */
+.button {
+    display: inline-block;
+    padding: 12px 30px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* 캐시 충전 버튼 */
+.button[style*="background-color: #0082fb"]:hover {
+    background-color: #006dfb !important;
+    box-shadow: 0 5px 15px rgba(9, 224, 208, 0.2);
+}
+
+/* 충전 내역 버튼 */
+.button[style*="background-color: #6c757d"]:hover {
+    background-color: #5a6268 !important;
+    box-shadow: 0 5px 15px rgba(108, 117, 125, 0.2);
+}

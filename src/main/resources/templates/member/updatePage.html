@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<head>
+    <link th:href="@{/css/updatePage.css}" rel="stylesheet">
+</head>
+
+<body>
+<div layout:fragment="content" class="content">
+
+    <div class="title-container">
+        <h1 data-shadow="NoRaRa!">NoRaRa!</h1>
+    </div>
+
+
+    <!-- 렌탈 관련 버튼들 -->
+    <div class="button-container">
+        <div>
+            <h1>회원정보 수정</h1>
+            <hr>
+            <button th:onclick="'location.href=\'' + @{/myInfo/update/{id}(id=${memberId.id})} + '\''">
+                <img th:src="@{/img/normalProfile.png}" class="button-icon" alt="렌탈등록 아이콘" style="width: 120px; height: 120px;">
+            </button>
+        </div>
+
+        <div>
+            <h1>라이브 방송 관리</h1>
+            <hr>
+            <button onclick="location.href='/liveRoom/set'">
+                <img th:src="@{/img/LiveStreaming.png}" class="button-icon" alt="라이브 방송 아이콘" style="width: 120px; height: 120px;">
+            </button>
+        </div>
+
+        <div>
+            <h1>도네이션 설정 관리</h1>
+            <hr>
+            <button onclick="location.href='/donation/set'">
+                <img th:src="@{/img/Donation.png}" class="button-icon" alt="도네이션 설정 아이콘" style="width: 120px; height: 120px;">
+            </button>
+        </div>
+
+    </div>
+
+    <!-- 경매 관련 버튼들 -->
+    <div class="button-container">
+        <div>
+            <h1>캐시충전</h1>
+            <hr>
+            <button onclick="location.href='/cash-summary/balance'">
+                <img th:src="@{/img/cash.png}" class="button-icon" alt="캐시충전 아이콘" style="width: 120px; height: 120px;">
+            </button>
+        </div>
+        <div>
+            <h1>별사탕 구매내역</h1>
+            <hr>
+            <button onclick="location.href='/api/refund/star'">
+                <img th:src="@{/img/StarCandyS.png}" class="button-icon" alt="별사탕 구매내역 아이콘" style="width: 120px; height: 120px;">
+            </button>
+        </div>
+        <div>
+            <h1>별사탕 환전</h1>
+            <hr>
+            <button onclick="location.href='/refund/star'">
+                <img th:src="@{/img/refund.png}" class="button-icon" alt="별사탕 환전 아이콘" style="width: 120px; height: 120px;">
+            </button>
+        </div>
+    </div>
+
+
+</div>
+</body>
+</html>

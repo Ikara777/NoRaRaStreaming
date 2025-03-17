@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<th:block layout:fragment="css">
+  <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+  <link th:href="@{/css/streamLive.css}" rel="stylesheet">
+</th:block>
+
+<head>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<th:block layout:fragment="script">
+  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+  <!-- CDN으로 변경 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+  <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+
+  <script th:inline="javascript">
+
+    function updateCashSummary() {
+
+            $.ajax({
+                url: '/api/cash-summary',
+                type: 'GET',
+                success: function(totalAmount) {
+                    $('.form-text span').text(totalAmount);
+                    $('#currentCashAmount').text(totalAmount);
+                    window.cashSummary = totalAmount;
+
+                },
+                error: function(xhr) {
+                    console.log('잔액 조회 실패:', xhr);
+                }
+            });
+
+
+        }
+
+
+    $(document).ready(function () {
+        const token = $("input[name='_csrf']").val();
+        const header = "_csrf";
+        const nickname = [[${member.nickname}]]; // 방송 주최자 닉네임
+        let stompClient = null;
+        const chatLogs = $("#chat_ul");
+        let selectedColor = '#000';  // 색상 선택 관련 코드
+
+        let chatCount = 0;
+        let isChatBlocked = false;
+        let chatTimer = null;
+        const MAX_MESSAGE_LENGTH = 50;
+        const CHAT_LIMIT_PERIOD = 5000; // 5초
+        const CHAT_LIMIT_COUNT = 5;    // 10회
+        const BLOCK_DURATION = 10000;   // 10초
+
+        updateCashSummary();
+
+        // 색상 선택 버튼 클릭 시 옵션 표시/숨김
+        $("#colorPickerBtn").click(function(e) {
+            e.stopPropagation();
+            $("#colorOptions").toggle();
+        });
+
+        // 색상 선택 시
+        $(".color-item").click(function() {
+            selectedColor = $(this).data("color");
+            $("#colorOptions").hide();
+        });
+
+        // 문서 클릭 시 색상 옵션 숨김
+        $(document).click(function() {
+            $("#colorOptions").hide();
+        });
+
+        function connect() {
+            const socket = new SockJS('/ws-chat');
+            stompClient = Stomp.over(socket);
+
+            const headers = {};
+            headers[header] = token;
+
+            stompClient.connect(headers, function() {
+                console.log('WebSocket Connected');
+                stompClient.subscribe(`/topic/chat/${nickname}`, function(message) {
+                    const chatMessage = JSON.parse(message.body);
+                    displayMessage(chatMessage);
+                });
+
+            // 후원 알림 구독 추가
+            stompClient.subscribe(`/topic/donation/${nickname}`, function(message) {
+                const donationMessage = JSON.parse(message.body);
+                displayDonation(donationMessage); // 후원 알림 표시 함수
+                });
+            });
+        }
+
+    // 메시지 표시 함수
+    function displayMessage(message) {
+        const messageElement = $("<li>");
+        const messageColor = message.color || '#000';
+
+        messageElement.html(`
+            <p>
+                <strong style="color: ${messageColor}">${message.senderId}</strong>:
+                <span style="color: #333">${message.message}</span>
+            </p>
+        `);
+        chatLogs.append(messageElement);
+
+        const chatLogsDiv = $("#chatLogs");
+        chatLogsDiv.scrollTop(chatLogsDiv[0].scrollHeight);
+    }
+
+
+
+    // 메시지 전송
+    $("#chatForm").on("submit", function(e) {
+        e.preventDefault();
+        const messageContent = $("#messageInput").val().trim();
+
+        // 메시지 길이 체크
+        if (messageContent.length > MAX_MESSAGE_LENGTH) {
+            alert("메시지는 50자를 초과할 수 없습니다.");
+            return;
+        }
+
+        if (isChatBlocked) {
+            alert("채팅 도배로 인해 10초간 채팅이 제한됩니다.");
+            return;
+        }
+
+        if (messageContent) {
+            // 채팅 횟수 증가
+            chatCount++;
+            
+            // 첫 채팅시 타이머 시작
+            if (!chatTimer) {
+                chatTimer = setTimeout(() => {
+                    if (chatCount >= CHAT_LIMIT_COUNT) {
+                        isChatBlocked = true;
+                        alert("도배로 인해 10초간 채팅이 제한됩니다.");
+                        setTimeout(() => {
+                            isChatBlocked = false;
+                        }, BLOCK_DURATION);
+                    }
+                    chatCount = 0;
+                    chatTimer = null;
+                }, CHAT_LIMIT_PERIOD);
+            }
+
+            stompClient.send(`/app/stream/chat/${nickname}`, {}, JSON.stringify({
+                message: messageContent,
+                color: selectedColor
+            }));
+            $("#messageInput").val('');
+        }
+    });
+    // 웹소켓 연결 시작
+    connect();
+
+    // 후원하기 버튼
+    $("#openDonationBtn").click(function() {
+        $("#overlay").show();
+        $("#sendPopup").show();
+    });
+
+    // 후원하기 & 팝업 관련 코드
+    const openDonationPopup = () => {
+        $("#overlay").show();
+        $("#sendPopup").show();
+    };
+
+    const closeDonationPopup = () => {
+        $("#overlay").hide();
+        $("#sendPopup").hide();
+    };
+
+    // 후원하기 버튼 클릭 시 팝업 열기
+    $("#openDonationBtn").click(function() {
+        openDonationPopup();
+    });
+
+    // 팝업 닫기 버튼과 오버레이 클릭 시 팝업 닫기
+    $("#closeDonationPopup").click(closeDonationPopup);
+    $("#overlay").click(closeDonationPopup);
+
+    // 후원하기 폼 제출
+    $("#donationForm").on("submit", function(e) {
+    e.preventDefault();
+    console.log("폼 제출 시작");
+
+
+    const amount = parseInt($("#donationAmount").val());
+    const message = $("#donationMessage").val();
+    const streamer = [[${member.nickname}]];
+
+    console.log("전송할 데이터:", {
+        amount: amount,
+        message: message,
+        streamer: streamer
+    });
+
+
+    // 1. 잔액 체크
+    if (amount > window.cashSummary) {
+        alert("잔액이 부족합니다.");
+        return;
+    }
+
+    // 2. 1000원 단위 체크 (조건식 수정)
+    if (amount < 1000 || amount % 1000 !== 0) {
+        alert("1000원 단위의 금액만 후원이 가능합니다.");
+        return;
+    }
+
+    // CSRF 토큰 확인
+    const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+    const csrfToken = $("meta[name='_csrf']").attr("content");
+    console.log("CSRF 토큰:", csrfHeader, csrfToken);
+
+
+
+    $.ajax({
+        url: "/cash-summary/api/donation",
+        type: "POST",
+        data: {
+            amount: amount,
+            message: message,
+            streamer: streamer
+        },
+        beforeSend: function(xhr) {
+            console.log("AJAX 요청 전송 직전");
+            xhr.setRequestHeader(csrfHeader, csrfToken);
+        },
+        success: function(response) {
+
+            console.log("성공 응답:", response);
+            updateCashSummary();
+            alert("후원이 완료되었습니다.");
+            closeDonationPopup();
+            $("#donationForm")[0].reset();
+
+        },
+        error: function(xhr, status, error) {
+            console.log("에러 상세 정보:", {
+                status: status,
+                error: error,
+                response: xhr.responseText
+            });
+            alert("후원 중 오류가 발생했습니다.");
+            }
+
+        });
+    });
+
+
+    $(".toggle-chat-btn").click(function() {
+        $(".chat-section").toggleClass("collapsed");
+        $(this).find('i').toggleClass('fa-angles-left fa-angles-right');
+    });
+});
+function displayDonation(donationMessage) {
+    const chatUl = $("#chat_ul");  // chat_ul을 타겟으로 변경
+    const donationHtml = `
+        <li class="donation-message">
+            <strong>${donationMessage.userNickname}</strong>님이
+            <span class="amount">${donationMessage.amount}원</span> 후원!
+            <p class="message">${donationMessage.message}</p>
+        </li>
+    `;
+    chatUl.append(donationHtml);  // chat_ul에 추가
+}
+
+
+function needLogin() {
+    if (confirm("후원을 하려면 로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?")) {
+        window.location.href = '/members/login';
+    }
+}
+
+
+
+  </script>
+</th:block>
+
+<div layout:fragment="content">
+
+
+  <div class="main-container">
+    <!-- 왼쪽 섹션 -->
+    <div class="stream-section">
+      <!-- 방송 제목 -->
+
+      <!-- 비디오 플레이어 -->
+        <div class="video-container">
+
+            <video id="live-video"
+                   class="video-js vjs-big-play-centered vjs-live"
+                   controls
+                   preload="auto"
+                   width="640"
+                   height="360"
+                   data-setup='{
+               "liveui": true,
+               "liveTracker": {
+                   "trackingThreshold": 60,
+                   "liveTolerance": 15
+               }
+           }'>
+                <source th:src="@{'http://localhost:8080/hls/' + ${member.streamKey} + '.m3u8'}" type="application/x-mpegURL" />
+
+            </video>
+
+        </div>
+
+      <!-- 스트리머 정보 -->
+      <div class="stream-info">
+        <div class="streamer-profile">
+          <img class="profile-image" th:src="${memberImg.imgUrl}" alt="방송 프로필 이미지">
+          <div class="streamer-details">
+
+            <h2 class="streamer-liveRoom" th:text="${LiveRoomSet.roomName}"></h2>
+            <h2 class="streamer-name" th:text="${member.nickname}"></h2>
+
+          </div>
+              <div class="follow-button-container">
+            <form th:if="${isLoggedIn}"
+                  th:action="${isFollowing ? '/api/unfollow/' + member.nickname : '/api/follow/' + member.nickname}"
+                  method="post">
+              <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+              <button type="submit" th:class="${isFollowing ? 'btn-unfollow' : 'btn-follow'}">
+                <span th:text="${isFollowing ? '팔로잉' : '팔로우'}"></span>
+              </button>
+            </form>
+            <a th:unless="${isLoggedIn}"
+               href="/members/login"
+               class="btn-follow">팔로우</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 오른쪽 채팅 섹션 -->
+      <div class="chat-section">
+
+        <div class="chat-header">
+            <!-- 색상 선택 레이어 추가 -->
+            <div th:if="${isLoggedIn}" class="color-picker-layer">
+
+                <button id="colorPickerBtn" class="color-picker-btn">
+                    <i class="fas fa-eyedropper"></i></button> <!--색상 선택 버튼 아이콘 -->
+
+                <div id="colorOptions" class="color-options" style="display: none;">
+                    <div class="color-grid">
+                        <div class="color-item" data-color="#FF4136" style="background-color: #FF4136;"></div>
+                        <div class="color-item" data-color="#0074D9" style="background-color: #0074D9;"></div>
+                        <div class="color-item" data-color="#2ECC40" style="background-color: #2ECC40;"></div>
+                        <div class="color-item" data-color="#FFDC00" style="background-color: #FFDC00;"></div>
+                        <div class="color-item" data-color="#B10DC9" style="background-color: #B10DC9;"></div>
+                        <div class="color-item" data-color="#FF851B" style="background-color: #FF851B;"></div>
+                        <div class="color-item" data-color="#7FDBFF" style="background-color: #7FDBFF;"></div>
+                        <div class="color-item" data-color="#F012BE" style="background-color: #F012BE;"></div>
+                        <div class="color-item" data-color="#01FF70" style="background-color: #01FF70;"></div>
+                        <div class="color-item" data-color="#AAAAAA" style="background-color: #AAAAAA;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="chat-title">채팅</h3>
+            <button type="button" class="toggle-chat-btn">
+                <i class="fas fa-angles-left"></i>
+            </button>
+        </div>
+
+          <div id="chat">
+              <div id="chatLogs">
+                  <div th:if="${!isLiveStreaming}" class="stream-offline">
+                      <p>현재 방송중이 아닙니다.</p>
+                  </div>
+                  <ul id="chat_ul" th:if="${isLiveStreaming}">
+                  </ul>
+              </div>
+
+            <form id="chatForm">
+              <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+
+              <div id="input-container">
+
+                  <textarea id="messageInput" name="message"
+                            th:placeholder="${!isLoggedIn ? '채팅을 하려면 로그인해주세요' : (!isLiveStreaming ? '현재 방송중이 아닙니다' : '메시지를 입력하세요')}"
+                            rows="3"
+                            th:disabled="${!isLoggedIn || !isLiveStreaming}">
+                  </textarea>
+
+                  <!-- 로그인 상태에 따라 다른 버튼 표시 -->
+                  <button th:if="${isLoggedIn && isLiveStreaming}"
+                          id="openDonationBtn"
+                          class="btn-donate">
+                      후원하기
+                  </button>
+                  <button th:unless="${isLoggedIn}"
+                          onclick="needLogin()"
+                          class="btn-donate">
+                      후원하기
+                  </button>
+                  <!----------------------->
+
+                  <button type="submit" id="sendButton"
+                          th:disabled="${!isLoggedIn || !isLiveStreaming}">
+                    전송
+                  </button>
+
+                  </div>
+              </form>
+
+          </div>
+
+      </div>
+
+  </div>
+
+
+    <!-- 팝업 오버레이와 팝업 창 추가 -->
+    <div id="overlay"></div>
+
+    <div id="sendPopup" style="display: none;">
+        <h3>후원하기</h3>
+        <form id="donationForm">
+
+            <div class="form-group">
+                <label for="donationAmount">후원 금액</label>
+                <input type="number"
+                        id="donationAmount"
+                        name="amount"
+                        class="form-control"
+                        min="1"
+                        th:max="${cashSummary != null ? cashSummary.totalAmount : 0}"
+                        th:disabled="${!isLoggedIn}"
+                        required>
+                <small class="form-text text-muted">
+                    현재 잔액: <span id="currentCashAmount" th:text="${cashSummary != null ? cashSummary.totalAmount : 0}">0</span>원
+                </small>
+
+            </div>
+            <div class="form-group">
+                <label for="donationMessage">메시지</label>
+                <textarea id="donationMessage"
+                          name="message"
+                          class="form-control"
+                          rows="3"
+                          maxlength="100"
+                          placeholder="후원 메시지를 입력하세요"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">후원하기</button>
+            <button type="button" id="closeDonationPopup" class="btn btn-secondary">취소</button>
+        </form>
+    </div>
+
+
+</div>
+
+</html>

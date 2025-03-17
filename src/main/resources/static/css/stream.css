@@ -1,0 +1,351 @@
+    .stream-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .stream-card {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+        background: #fff;
+    }
+
+    .stream-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .thumbnail-container {
+        position: relative;
+        width: 100%;
+        padding-top: 56.25%; /* 16:9 비율 */
+    }
+
+    .thumbnail {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 7px;
+
+    }
+
+    .thumbnail-container:hover{
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .preview-player {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .stream-card:hover .preview-player {
+        display: block;
+    }
+
+    .stream-info {
+        padding: 15px;
+    }
+
+    .streamer-name {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+        text-decoration: none;
+    }
+
+    .stream-title {
+    font-size: 16px;
+    color: #333;
+    margin: 5px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    }
+
+    .stream-description {
+        font-size: 14px;
+        color: #666;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-height: 40px;
+        line-height: 20px;
+    }
+
+    .live-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #e74c3c;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .viewer-count {
+        font-size: 14px;
+        color: #666;
+    }
+
+    /* 현재 방송 중인 스트리머 제목 스타일링 */
+
+    .stream-head {
+        background-color: #F6F6F9;
+        border-radius: 10px;
+        margin: 30px 20px 20px;
+        padding-margin: 10px;
+
+    }
+
+    .stream-head h2 {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+        padding:20px;
+    }
+
+    .stream-head i {
+        color: #0788e6;  /* 파란색 아이콘 */
+        padding-right: 5px;
+    }
+
+
+    /* 링크 스타일링 - 밑줄 제거 */
+    a {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .stream-info a:hover {
+        color: #666;
+    }
+
+    /*스트리머 프로필 사진 */
+    .streamer-profile {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    
+    .profile-img {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        margin-right: 10px;
+        object-fit: cover;
+    }
+    
+    .streamer-name {
+        font-size: 16px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    /* 비디오 컨트롤 영역*/
+    .videoController {
+        width: 1350px;
+        height: 600px;
+        margin: 0 auto;  /* 중앙 정렬 */
+        overflow: hidden;  /* 넘치는 부분 숨김 */
+        position: relative;
+        border-radius: 20px;
+        margin-bottom : 100px    ;
+    }
+    
+    .topVideo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;  /* 비디오가 컨테이너를 꽉 채우도록 */
+    }
+
+    /* 노라라 타이틀 */
+    
+    #norara-title{
+         text-align: center;  /* 텍스트 중앙 정렬 */
+         margin-right: 450px;
+         margin-left: 450px;
+    }
+
+    #norara-title h1{
+        font-size: 72px;
+        font-weight:700;
+        margin-bottom:32px;
+    }
+
+    #norara-title h2{
+        font-size: 24px;
+        font-weight:600;
+        margin-bottom:32px;
+    }
+
+    #norara-title .read{
+        font-size: 20px;
+        font-weight:500;
+        margin-bottom:32px;
+    }
+
+   /* 로그인 연결 버튼 */
+    .btn-login {
+        width: 150px;
+        display: block;
+        padding: 12px 23px;
+        background: linear-gradient(to right, #0082fb, #00C7AE);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        margin-top: 10px;
+        margin: 10px auto;  /* 중앙 정렬 */
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 199, 174, 0.3);  /* #00C7AE의 그림자 */
+    }
+
+
+    /* OBS 스트리밍 소개 이미지 영역*/
+     .obs-container {
+         position: relative;
+         width: 900px;
+         height: 500px;
+         margin: 100px auto 0px auto;
+         overflow: hidden;
+     }
+
+     .gradient-background {
+         position: absolute;
+         top: 0;
+         left: 0;
+         width: 100%;
+         height: 100%;
+         opacity: 0.3;
+         z-index: -1;
+     }
+
+     .center-obs {
+         position: absolute;
+         top: 50%;
+         left: 50%;
+         transform: translate(-50%, -50%);
+         width: 600px;
+         height: 600px;
+         z-index: 2;
+     }
+
+    .earth-icon {
+        position: absolute;
+        top: 5%;
+        left: 5%;
+        width: 200px;
+        height: 200px;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    .mike-icon {
+        position: absolute;
+        bottom: 5%;
+        left: 10%;
+        width: 200px;
+        height: 200px;
+        animation: float 3s ease-in-out infinite;
+        animation-delay: 0.5s; /* 각 아이콘마다 시차를 줘서 더 자연스럽게 */
+    }
+
+    .paypal-icon {
+        position: absolute;
+        top: 20%;
+        right: 0%;
+        width: 200px;
+        height: 200px;
+        animation: float 3s ease-in-out infinite;
+        animation-delay: 1s;
+    }
+
+     .obs-container img {
+         width: 100%;
+         height: 100%;
+         object-fit: contain;
+     }
+
+
+    /* ----obs 스트리밍 하단 설명  */
+    #obs-title{
+         text-align: center;  /* 텍스트 중앙 정렬 */
+         margin-right: 450px;
+         margin-left: 450px;
+         margin-top: -20px;
+    }
+
+    #obs-title h1{
+        text-align : center;
+        font-weight: 600;
+        font-size: 47px;
+    }
+
+    #obs-title .read{
+        font-size: 20px;
+        font-weight:500;
+        text-align : center;
+        margin-bottom:32px;
+    }
+
+    /* 에니메이션 움직임 키 추가 */
+    @keyframes float {
+        0% {
+            transform: translateY(0px);
+        }
+        50% {
+            transform: translateY(-15px);
+        }
+        100% {
+            transform: translateY(0px);
+        }
+    }
+
+
+    /* 파티클 메이션 추가 */
+    .particles-container {
+        position: relative;
+        width: 100vw;          /* 뷰포트 너비 */
+        height: 200vh;         /* 뷰포트 높이 */
+        margin-left: calc(-50vw + 50%);  /* 전체 화면 너비로 확장 */
+        margin-right: calc(-50vw + 50%); /* 전체 화면 너비로 확장 */
+        overflow: hidden;
+    }
+    
+    #norara-title, .videoController, .orbit-container {  /* 파티클보다 위에 위치하도록 설정 */
+        position: relative;
+        z-index: 1; 
+    }
+
+    #particles-js {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;  /* 가장 낮은 레이어로 설정 */
+    }
+    
+    /* 컨텐츠가 파티클 위에 보이도록 */
+    .stream-head, .stream-grid {
+        position: relative;
+        z-index: 1;
+    }
+

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <title>별풍선 환전</title>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f4f7fc;
+        margin: 0;
+        padding: 0;
+    }
+
+    h3 {
+        text-align: center;
+        margin-top: 50px;
+        margin-bottom: 20px;
+        font-size: 2em;
+        color: #333;
+        font-weight: 600;
+    }
+
+    .container {
+        display: flex;
+        align-items: flex-start; /* 상단 정렬 */
+        gap: 30px;
+    }
+
+    .total-amount {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        width: 550px; /* 최대 너비 */
+    }
+
+    .rent-list {
+        width: 800px; /* 최대 너비 */
+        max-height: 700px;
+        overflow-y: auto;
+    }
+
+    .total-amount span {
+        color: #1e73be;
+        font-weight: bold;
+    }
+
+    .total-amount p {
+        font-size: 0.9em;
+        color: #777;
+        margin-top: 11px;
+        margin-bottom: -2px;
+    }
+
+    .rent-item {
+        padding: 20px;
+        margin: 0px 12px 12px 12px ;
+        background-color: #fff;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-wrap: wrap;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease; /* 부드러운 전환 추가 */
+        gap: 20px;
+    }
+
+    .rent-item:hover {
+        padding: 20px;
+        margin: 12px;
+        background-color: #0788e6; /* 예쁜 파란색 */
+        border-radius: 6px;
+        box-shadow: 1px 1px 8px rgba(0, 0, 255, 0.3); /* 파란색 그림자 */
+        display: flex;
+        flex-wrap: wrap; /* 아이템을 래핑하도록 설정 */
+        gap: 20px;
+        transform: translate(1px, -1px); /* 오른쪽 상단으로 1px 이동 */
+    }
+
+
+    .rent-item p {
+        font-size: 0.95em;
+        color: #555;
+        margin: 0;
+        display: inline-block; /* Display the <p> tags inline */
+    }
+
+    .rent-item:hover p {
+        font-size: 0.95em;
+        font-weight: 600;
+        color: #fff;
+        margin: 0;
+        display: inline-block;
+    }
+
+
+    form {
+        background-color: #fff;
+        padding: 20px;
+        max-width: 550px;
+        width: 100%; /* Ensure the form takes up full width */
+        margin-top: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    form label {
+        font-size: 1em;
+        color: #333;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    form input, form select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        font-size: 1em;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background-color: #fafafa;
+        transition: border-color 0.3s ease;
+    }
+
+    form input:focus, form select:focus {
+        border-color: #1e73be;
+        outline: none;
+    }
+
+    form button {
+        width: 100%;
+        padding: 12px;
+        font-size: 1.1em;
+        color: white;
+        background-color: #1e73be;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    form button:hover {
+        background-color: #155a8a;
+    }
+
+    /* 스크롤 바 디자인 */
+    .rent-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .rent-list::-webkit-scrollbar-thumb {
+        background-color: #1e73be;
+        border-radius: 10px;
+    }
+
+    .rent-list::-webkit-scrollbar-track {
+        background-color: #f0f0f0;
+        border-radius: 10px;
+    }
+
+
+  </style>
+</head>
+<div layout:fragment="content" class="content">
+
+  <div class="container">
+    <!-- 왼쪽 영역 -->
+    <div>
+      <h3>환전 신청</h3>
+      <div class="total-amount">
+        총 별풍선 수량: <span id="totalStar">0</span>개<br>
+        환전 금액: <span id="totalAmount">0</span>원
+        <p>* 최소 10000원 이상 부터 환전이 가능합니다.</p>
+        <p>* 총 별풍선 금액의 20%는 수수료로 차감이 됩니다.</p>
+      </div>
+
+      <form id="starRequestForm">
+        <div>
+          <label for="bankCode">은행 선택:</label>
+          <select id="bankCode" name="bankCode" required>
+            <option value="004">KB국민은행</option>
+            <option value="088">신한은행</option>
+            <option value="020">우리은행</option>
+            <option value="003">기업은행</option>
+            <option value="011">NH농협은행</option>
+            <option value="081">하나은행</option>
+          </select>
+        </div>
+        <div>
+          <label for="accountNumber">계좌번호:</label>
+          <input type="text" id="accountNumber" name="accountNumber" required>
+        </div>
+        <div>
+          <label for="accountHolder">예금주:</label>
+          <input type="text" id="accountHolder" name="accountHolder" required>
+        </div>
+        <input type="hidden" id="amount" name="amount">
+        <button type="submit">환전 신청</button>
+      </form>
+
+    </div>
+
+
+    <!-- 오른쪽 영역 -->
+    <div>
+      <h3>별사탕 후원 내역</h3>
+      <div class="rent-list" id="rentList">
+        <div th:each="rent : ${rentList}" class="rent-item">
+          <p>후원자 : <span th:text="${rent.nickname}"></span></p>
+          <p>별풍선 수량: <span th:text="${rent.rentAmount}"></span>개</p>
+          <p>메시지: <span th:text="${rent.message}"></span></p>
+        </div>
+
+      </div>
+
+    </div>
+
+
+
+  </div>
+
+
+</div>
+
+<th:block layout:fragment="script">
+<script th:inline="javascript">
+
+  $(document).ready(function() {
+      // 총 금액 계산
+
+      let totalStar = 0;
+      [[${rentList}]].forEach(function(rent) {
+          totalStar += rent.rentAmount;
+      });
+
+      // 수수료 20% 차감하고 Math.round로 1의 자리까지 반올림
+      let totalAmount = Math.round(totalStar * 0.8);
+
+      $('#totalStar').text(totalStar); // 원래 별풍선 수량은 +=로 증감만 되도록 함
+      $('#totalAmount').text(totalAmount); // 환전 금액은 *0.8 하고 반올림
+      $('#amount').val(totalAmount);
+
+      // 무한 스크롤
+      let page = 1;
+      let loading = false;
+
+
+      $('.rent-list').scroll(function() {
+          if($(this).scrollTop() + $(this).innerHeight() >= $(this)[0].scrollHeight - 20) {
+              if(!loading) {
+                  loading = true;
+                  // 추가 데이터 로드 로직
+                  // ...
+                  loading = false;
+              }
+          }
+      });
+
+
+      // 환전 신청 제출
+      $('#starRequestForm').on('submit', function(e) {
+          e.preventDefault();
+
+          const token = $("meta[name='_csrf']").attr("content");
+          const header = $("meta[name='_csrf_header']").attr("content");
+
+          const data = {
+              bankCode: $('#bankCode').val(),
+              accountNumber: $('#accountNumber').val(),
+              accountHolder: $('#accountHolder').val(),
+              amount: parseInt($('#amount').val())
+          };
+
+          $.ajax({
+              url: '/refund/request',
+              type: 'POST',
+              contentType: 'application/json',
+              data: JSON.stringify(data),
+
+              beforeSend: function(xhr) {
+                  xhr.setRequestHeader(header, token);
+              },
+              success: function(response) {
+                  alert(response);
+                  location.reload();
+              },
+              error: function(xhr) {
+                  alert('오류 발생: ' + xhr.responseText);
+              }
+          });
+      });
+
+      // 계좌번호 하이픈 자동 추가
+      $('#accountNumber').on('input', function() {
+          let value = $(this).val().replace(/[^0-9]/g, '');
+          if(value.length > 8) {
+              value = value.replace(/(\d{3})(\d{3})(\d{3})/, '$1-$2-$3');
+          }
+          $(this).val(value);
+      });
+  });
+</script>
+</th:block>
+</html>

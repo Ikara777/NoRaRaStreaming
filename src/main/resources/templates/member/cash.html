@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<head>
+  <link th:href="@{/css/cash.css}" rel="stylesheet">
+
+</head>
+
+<body>
+<div layout:fragment="content" class="content">
+  <div class="container">
+    <ul class="subMenu">
+      <li><button type="button" class="tab"><a th:href="@{'/myInfo/update/' + ${memberId}}"> 내정보 </a></button></li>
+      <li><button type="button" class="tab"><a th:href="@{/liveRoom/set}"> 라이브 방송 관리 </a></button></li>
+      <li><button type="button" class="tab active"><a href="/cash-summary/balance"> 캐시충전 </a></button></li>
+      <li><button type="button" class="tab"><a th:href="@{'/api/refund/star'}"> 별사탕 구매내역 </a></button></li>
+    </ul>
+
+    <h3>캐시 잔액 조회</h3>
+
+    <table>
+      <tr>
+        <td>현재 캐시 잔액</td>
+        <td><p th:text="${totalAmount} + ' 원'"></p></td>
+      </tr>
+
+      <tr>
+        <td>캐시 충전하기</td>
+        <td><a href="/api/payment/verify-page" class="button" style="background-color: #0082fb">캐시 충전</a></td>
+      </tr>
+
+      <tr>
+        <td>이용 내역 보기</td>
+        <td><a href="/api/refund" class="button" style="background-color: #6c757d;">충전 내역</a></td>
+
+      </tr>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

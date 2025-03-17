@@ -1,0 +1,50 @@
+<!-- member/board.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<div layout:fragment="content">
+  <div class="container">
+    <h2>게시글 작성</h2>
+
+    <form th:action="@{/board/new}"
+          th:object="${boardDto}"
+          method="post">
+
+      <input type="hidden" th:field="*{memberId}" />
+      <input type="hidden" th:field="*{nickname}" />
+
+
+      <div class="form-group">
+        <label th:for="title">제목</label>
+        <input type="text"
+               th:field="*{title}"
+               class="form-control"
+               placeholder="제목을 입력해주세요">
+        <p th:if="${#fields.hasErrors('title')}"
+           th:errors="*{title}"
+           class="fieldError">Incorrect data</p>
+      </div>
+
+      <div class="form-group">
+        <label th:for="message">내용</label>
+        <textarea th:field="*{message}"
+                  class="form-control"
+                  rows="10"
+                  placeholder="내용을 입력해주세요"></textarea>
+        <p th:if="${#fields.hasErrors('message')}"
+           th:errors="*{message}"
+           class="fieldError">Incorrect data</p>
+      </div>
+
+      <div style="text-align: center">
+        <button type="submit" class="btn btn-primary">저장</button>
+        <button type="button" class="btn btn-secondary"
+                onclick="history.back()">취소</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+</html>

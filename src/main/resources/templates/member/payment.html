@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="_csrf" th:content="${_csrf.token}" />
+  <meta name="_csrf_header" th:content="${_csrf.headerName}">
+  <script src="https://cdn.iamport.kr/v1/iamport.js"></script>
+  <script type="text/javascript" src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+  <link th:href="@{/css/payment.css}" rel="stylesheet">
+
+  <script>
+
+
+
+
+
+    var IMP = window.IMP;
+    IMP.init("귀하의 imp 상점 번호");
+
+function requestPay() {
+    const amount = document.getElementById("amount").value; // 사용자가 입력한 결제 금액
+    const merchantUid = /*[[${merchantUid}]]*/ ''; // 주문번호
+    const buyerId = /*[[${userId}]]*/ ''; // 사용자 ID
+    const buyerEmail = document.getElementById("user-email").innerText; // 사용자 이메일
+    const buyerName = document.getElementById("user-name").innerText; // 사용자 이름
+    const buyerAdd = document.getElementById("user-add").innerText; // 사용자 주소
+    const buyerTel = document.getElementById("user-tel").innerText; // 사용자 전화번호
+
+    if (!amount || amount <= 0) {
+        alert("결제 금액을 올바르게 입력해주세요.");
+        return;
+    }
+
+    IMP.request_pay({
+    pg: 'kakaopay', // 결제 PG사
+    pay_method: 'card', // 결제 수단
+    merchant_uid: merchantUid, // 주문 고유 번호
+    name: "캐시 충전", // 결제 상품명
+    amount: amount, // 결제 금액
+    buyer_email: buyerEmail, // 사용자 이메일
+    buyer_name: buyerName, // 사용자 이름
+    buyer_tel: buyerTel, // 사용자 전화번호
+    buyer_addr: buyerAdd, // 사용자 주소
+      }, function (rsp) {
+          if (rsp.success) {
+              var token = $("meta[name='_csrf']").attr("content");
+              var header = $("meta[name='_csrf_header']").attr("content");
+
+              jQuery.ajax({
+                  url: "/api/payment/verify",
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", [header]: token },
+                  data: JSON.stringify({
+
+                    impUid: rsp.imp_uid, // 결제 고유 번호 (PG사 응답값)
+                    merchantUid: merchantUid, // 주문 고유 번호
+                    paidAmount: amount, // 결제된 금액
+                    userId: buyerId, // 사용자 ID
+                    email: buyerEmail, // 사용자 이메일
+                    name: buyerName, // 사용자 이름
+                    tel: buyerTel, // 사용자 전화번호
+                    address: buyerAdd, // 사용자 주소
+
+                  })
+              }).done(function () {
+                  alert("결제가 성공적으로 처리되었습니다.");
+                  window.location.href = "/";
+              }).fail(function () {
+                  alert("결제 처리에 실패했습니다.");
+              });
+          } else {
+              alert("결제 실패: " + rsp.error_msg);
+          }
+      });
+  }
+  </script>
+</head>
+<body>
+<div class="container" layout:fragment="content">
+  <h1>결제 페이지</h1>
+  <form id="payment-form">
+    <!-- 사용자 정보 표시 -->
+    <p>이메일: <span id="user-email" th:text="${email}"></span></p>
+    <p>이름: <span id="user-name" th:text="${name != null ? name : '알 수 없음'}"></span></p>
+    <p>전화번호: <span id="user-tel" th:text="${tel != null ? tel : '알 수 없음'}"></span></p>
+    <p>주소: <span id="user-add" th:text="${add != null ? add : '알 수 없음'}"></span></p>
+
+
+    <!-- 결제 금액 입력 -->
+    <label for="amount">결제 금액</label>
+    <input type="number" id="amount" name="amount" placeholder="원하는 금액 입력" required />
+
+    <!-- 결제 버튼 -->
+    <button type="button" class="pay-button" onclick="requestPay()">
+      결제하기
+    </button>
+  </form>
+</div>
+</body>
+</html>

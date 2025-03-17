@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<head>
+  <meta charset="UTF-8">
+  <title>현재 방송 목록</title>
+  <link th:href="@{/css/stream.css}" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+</head>
+
+<div layout:fragment="content">
+
+    <div class="particles-container">
+
+        <div id="particles-js"></div>
+
+        <div class="videoController">
+            <video autoplay muted loop playsinline class="topVideo">
+                <source th:src="@{/img/noraraVido.mp4}" type="video/mp4">
+                브라우저가 동영상을 지원하지 않습니다.
+            </video>
+        </div>
+
+
+        <div id="norara-title">
+            <h2>실시간 방송의 새로운 즐거움!</h2>
+            <h1>노라라</h1>
+            <span class="read">지금 노라라에 로그인하고 <br>
+                더 많은 <b>방송</b>과 <b>후원</b>의 세계를 경험해보세요!</span>
+            <button onclick="needLogin()" class="btn-login">
+                로그인
+            </button>
+
+        </div>
+
+        <div class="obs-container">
+
+            <div class="center-obs">
+                <img src="/img/obsicon.png" alt="OBS Icon">
+            </div>
+            <div class="earth-icon">
+                <img src="/img/earth.png" alt="Earth">
+            </div>
+            <div class="mike-icon">
+                <img src="/img/mike.png" alt="Microphone">
+            </div>
+            <div class="paypal-icon">
+                <img src="/img/cam.png" alt="PayPal">
+            </div>
+            <div class="gradient-background"></div>
+        </div>
+
+            <div id="obs-title">
+                <h1>OBS를 통한 간편한 스트리밍</h1>
+                <span class="read">노라라에서 발급되는 방송 스트림키를 이용하여
+                    <br>OBS-Live 방송을 간편하게 진행할 수 있습니다.</span>
+            </div>
+
+
+      </div>
+
+    <div class="stream-head">
+        <h2><i class="fas fa-broadcast-tower"></i> 현재 방송 중인 스트리머</h2>
+    </div>
+
+  <div class="stream-grid">
+    <!-- member, liveRoomSet, liveRoomSetImg를 함께 순회 -->
+    <div th:each="member, iterStat : ${streamKeys}" class="stream-card">
+        <a th:href="@{'/api/streams/' + ${member.nickname}}">
+            <div class="thumbnail-container">
+                <!-- 썸네일 이미지 - liveRoomSetImgList 사용 -->
+                <img class="thumbnail"
+                     th:src="${liveRoomSetImgList[iterStat.index].imgUrl}"
+                     th:alt="${liveRoomSetList[iterStat.index].roomName}">
+
+                <!-- 미리보기 플레이어 -->
+                <video class="preview-player" muted loop
+                       th:data-stream="${member.streamKey}">
+                </video>
+
+                <span class="live-badge">LIVE</span>
+            </div>
+
+            <div class="stream-info">
+                <div class="streamer-profile">
+                    <!-- 프로필 이미지 -->
+                    <img class="profile-img" th:src="${memberImgList[iterStat.index].imgUrl}" alt="프로필 이미지">
+                    <!-- 스트리머 닉네임 -->
+                    <div class="streamer-name" th:text="${member.nickname}">스트리머 이름</div>
+                </div>
+                <!-- 방송 제목 -->
+                <div class="stream-title" th:text="${liveRoomSetList[iterStat.index].roomName}">방송 제목</div>
+                <!-- 방송 설명 -->
+                <div class="stream-description" th:text="${liveRoomSetList[iterStat.index].roomDtl}">방송 설명</div>
+            </div>
+        </a>
+    </div>
+  </div>
+
+  <!-- 미리보기 재생을 위한 JavaScript -->
+  <script th:inline="javascript">
+    document.querySelectorAll('.stream-card').forEach(card => {
+        const video = card.querySelector('video');
+        const streamKey = video.dataset.stream;
+
+        card.addEventListener('mouseenter', () => {
+            // HLS 스트림 URL (nginx-rtmp에서 제공하는 HLS 주소)
+            video.src = `http://localhost:8080/hls/${streamKey}/index.m3u8`;
+            video.play().catch(e => console.log('Preview playback failed:', e));
+        });
+
+        card.addEventListener('mouseleave', () => {
+            video.pause();
+            video.src = '';
+        });
+    });
+
+    particlesJS('particles-js', {
+    particles: {
+        number: {
+        value: 15,
+        density: {
+            enable: true,
+            value_area: 800
+        }
+        },
+        color: {
+        value: ['#9147ff', '#0082fb', '#00C7AE']  // 여러 색상 설정
+        },
+        shape: {
+        type: 'circle'
+        },
+        opacity: {
+        value: 0.6,
+        random: false
+        },
+        size: {
+        value: 5,
+        random: true
+        },
+        line_linked: {
+        enable: true,
+        distance: 150,
+        color: '#9147ff',  // 연결선 색상
+        opacity: 0.4,
+        width: 1
+        },
+        move: {
+        enable: true,
+        speed: 2,
+        direction: 'none',
+        random: false,
+        straight: false,
+        out_mode: 'out',
+        bounce: false
+        }
+    },
+    interactivity: {
+        detect_on: 'canvas',
+        events: {
+        onhover: {
+            enable: true,
+            mode: 'grab'
+        },
+        onclick: {
+            enable: true,
+            mode: 'push'
+        },
+        resize: true
+        }
+    },
+    retina_detect: true
+    });
+  </script>
+</div>
+
+</html>

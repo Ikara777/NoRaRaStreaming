@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<th:block layout:fragment="css">
+    <link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet" />
+    <link th:href="@{/css/streamLive.css}" rel="stylesheet">
+
+</th:block>
+<th:block layout:fragment="script">
+    <script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
+    <script>
+        $(document).ready(function () {
+        // CSRF 토큰 설정
+        const token = $("input[name='_csrf']").val();
+        const header = "_csrf";
+
+        // Ajax 요청 전에 CSRF 토큰을 헤더에 추가
+        $.ajaxSetup({
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader(header, token);
+            }
+        });
+
+        const chatLogs = $("#chatLogs ul");
+        const pathArray = window.location.pathname.split('/');
+        const nickname = pathArray[pathArray.length - 1];
+
+        // 채팅 제한 관련 변수
+        let messageCount = 0;
+        let lastMessageTime = new Date();
+        let isCooldown = false;
+
+        // 채팅 로그 새로고침 함수
+        function refreshChatLogs() {
+            $.ajax({
+                url: `/stream/popup/${nickname}`,
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    chatLogs.empty();
+                    if (data.chatLogs && data.chatLogs.length > 0) {
+                        data.chatLogs.forEach(log => {
+                            const newLog = `
+                                <li>
+                                    <p>
+                                        <strong>${log.senderId}</strong>: ${log.message}
+                                    </p>
+                                </li>`;
+                            chatLogs.append(newLog);
+                        });
+                    } else {
+                        chatLogs.html("<li>채팅 로그가 없습니다.</li>");
+                    }
+                },
+                error: function (jqXHR) {
+                    console.error("채팅 로그 갱신 실패:", jqXHR.responseText);
+                }
+            });
+        }
+
+        // 메시지 전송
+        $("#chatForm").on("submit", function (e) {
+            e.preventDefault();
+            const currentTime = new Date();
+            const message = $("#messageInput").val().trim();
+
+            // 빈 메시지 체크
+            if (!message) {
+                return false;
+            }
+
+            // 쿨다운 체크
+            if (isCooldown) {
+                alert("과도한 채팅으로 인해 5초간 대기시간이 적용됩니다.");
+                return false;
+            }
+
+            // 메시지 길이 체크
+            if (message.length > 40) {
+                alert("메시지는 40자를 초과할 수 없습니다.");
+                return false;
+            }
+
+            // 5초 이내 메시지 카운트 체크
+            if (currentTime - lastMessageTime <= 5000) {
+                messageCount++;
+                if (messageCount >= 5) {
+                    isCooldown = true;
+                    messageCount = 0;
+                    setTimeout(() => {
+                        isCooldown = false;
+                    }, 5000);
+                    alert("과도한 채팅으로 인해 5초간 대기시간이 적용됩니다.");
+                    return false;
+                }
+            } else {
+                messageCount = 1;
+            }
+
+            lastMessageTime = currentTime;
+
+            // 메시지 전송 Ajax
+            $.ajax({
+                url: `/stream/member/${nickname}`,
+                type: "POST",
+                contentType: "application/x-www-form-urlencoded",
+                data: {
+                    message: message,
+                    _csrf: token
+                },
+                success: function (data) {
+                    if (data.success) {
+                        const newMessage = `
+                            <li>
+                                <p>
+                                    <strong>${data.sender}</strong>: ${data.message}
+                                </p>
+                            </li>`;
+                        chatLogs.append(newMessage);
+                        $("#messageInput").val("");
+                    }
+                },
+                error: function (jqXHR) {
+                    console.error("메시지 전송 실패:", jqXHR.responseText);
+                }
+            });
+        });
+
+        // 초기 채팅 로그 로드 및 주기적 갱신
+        refreshChatLogs();
+        setInterval(refreshChatLogs, 2000);
+    });
+    </script>
+</th:block>
+
+<div layout:fragment="content">
+    <div class="main-container">
+        <div class="stream-section">
+            <div class="header">
+                <h1 th:text="${member.nickname} + '님의 실시간 방송'"></h1>
+            </div>
+
+            <div class="video-container">
+                <video id="my-video" class="video-js vjs-big-play-centered" controls preload="auto" data-setup='{}'>
+                    <source th:src="@{'http://localhost:8080/hls/' + ${member.streamKey} + '.m3u8'}" type="application/x-mpegURL" />
+                </video>
+            </div>
+
+            <div class="stream-info">
+                <div class="streamer-header">
+                    <h2>스트리머 정보</h2>
+                    <div class="follow-button-container">
+                        <form th:if="${isLoggedIn}"
+                              th:action="${isFollowing ? '/api/unfollow/' + member.nickname : '/api/follow/' + member.nickname}"
+                              method="post"
+                              style="display: inline;">
+                            <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+                            <button type="submit" th:class="${isFollowing ? 'btn-unfollow' : 'btn-follow'}">
+                                <span th:text="${isFollowing ? '팔로잉' : '팔로우'}"></span>
+                            </button>
+                        </form>
+                        <a th:unless="${isLoggedIn}"
+                           href="/members/login"
+                           class="btn-follow">팔로우</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stream-info">
+                <h2>OBS 방송 설정</h2>
+                <p><strong>RTMP 서버 주소:</strong> <code>rtmp://localhost:1935/live</code></p>
+                <p><strong>스트림 키:</strong> <code th:text="${member.streamKey}"></code></p>
+            </div>
+        </div>
+
+        <div class="chat-section">
+            <div id="chat">
+                <h3 style="padding: 15px; margin: 0; border-bottom: 1px solid #eee;">채팅</h3>
+                <div id="chatLogs">
+                    <div th:if="${!isLiveStreaming}" class="stream-offline">
+                        <p>현재 방송중이 아닙니다.</p>
+                    </div>
+                    <ul id="chat_ul" th:if="${isLiveStreaming}">
+                        <li th:each="log : ${chatLogs}">
+                            <p>
+                                <strong th:text="${log.senderId}">Sender</strong>:
+                                <span th:text="${log.message}">Message</span>
+                            </p>
+                        </li>
+                    </ul>
+                </div>
+
+                <form id="chatForm" th:action="@{/stream/member/{nickname}(nickname=${member.nickname})}" method="post">
+                    <input type="hidden" name="_csrf" th:value="${_csrf.token}" />
+                    <div id="input-container">
+                        <textarea id="messageInput" name="message"
+                                  th:placeholder="${!isLoggedIn ? '채팅을 하려면 로그인해주세요' : (!isLiveStreaming ? '현재 방송중이 아닙니다' : '메시지를 입력하세요')}"
+                                  rows="3"
+                                  th:disabled="${!isLoggedIn || !isLiveStreaming}">
+                        </textarea>
+                        <button type="submit" id="sendButton"
+                                th:disabled="${!isLoggedIn || !isLiveStreaming}">
+                            전송
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+</html>

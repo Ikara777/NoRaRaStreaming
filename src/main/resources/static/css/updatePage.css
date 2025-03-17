@@ -1,0 +1,118 @@
+    @import url(https://fonts.googleapis.com/css?family=Righteous);
+
+    .title-container {
+      display: flex;
+      justify-content: center; /* 가로 중앙 정렬 */
+      width: 100%;
+      text-align: center; /* 텍스트도 중앙 정렬 */
+      position: relative; /* :after 가상 요소를 정확히 배치하려면 필요 */
+    }
+
+    .title-container h1 {
+      position: relative; /* :after 가상 요소를 h1 기준으로 배치 */
+      color: #0788e6;
+      font-family: 'Righteous', serif;
+      font-size: 12em;
+      text-shadow: .03em .03em 0 #00cedf;
+    }
+
+    .title-container h1:after {
+      content: attr(data-shadow);
+      position: absolute;
+        top: .06em; left: .06em;
+      z-index: -1;
+      text-shadow: none;
+
+      background-image:
+        linear-gradient(
+          45deg,
+          transparent 45%,
+          rgb(0, 153, 255) 45%,  /* 파랑 */
+          rgb(102, 255, 204) 55%,  /* 민트 */
+          transparent 0
+        );
+        background-size: .03em .03em;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shad-anim 45s linear infinite;
+    }
+
+    @keyframes shad-anim {
+      0% {background-position: 0 0}
+      0% {background-position: 100% -100%}
+      }
+
+    /*----------------------*/
+
+    .content{
+        margin-bottom:250px;
+        margin-top: 0px;
+    }
+
+    /* 전체 컨테이너 */
+      .button-container {
+          display: flex;
+          justify-content: center; /* 버튼들을 가운대로 배치 */
+          flex-wrap: wrap; /* 화면에 맞게 줄바꿈 */
+          margin-bottom: 50px; /* 마진 줄임 */
+          gap: 12px; /* 항목 간의 간격 줄임 */
+      }
+
+      .button-container div {
+          text-align: center; /* 아이템 중앙 정렬 */
+          margin: 0; /* 각 버튼 간격을 없앱니다 */
+          flex-basis: 20%; /* 각 항목의 크기를 더 작은 비율로 설정 */
+          padding: 8px; /* 내부 여백 줄임 */
+          transition: box-shadow 0.3s ease-in-out; /* 호버 시 그림자 애니메이션 */
+          width: 160px; /* 버튼의 크기 줄임 */
+          height: 180px; /* 버튼의 크기 줄임 */
+          border: 2px solid #ededed;
+          background-color : #F6F6F9;
+      }
+
+      /* 버튼 스타일 (버튼을 보이지 않게 설정) */
+      .button-container button {
+          padding: 0; /* 버튼 내부 여백 제거 */
+          font-size: 0; /* 텍스트 제거 */
+          background-color: transparent; /* 배경을 투명하게 설정 */
+          border: none; /* 버튼 테두리 제거 */
+          width: 100%; /* 버튼 크기 100%로 설정 */
+          height: 100%; /* 버튼 크기 100%로 설정 */
+          cursor: pointer;
+      }
+
+      .button-container button:hover {
+          background-color: transparent; /* 호버 시 배경색 변화 없음 */
+          border: 0px solid #ededed;
+
+      }
+
+      /* 이미지 아이콘 크기 */
+      .button-icon {
+          width: 100%; /* 이미지를 버튼 크기에 맞게 확장 */
+          height: auto; /* 이미지의 비율을 유지 */
+          vertical-align: middle; /* 텍스트와 이미지 정렬 */
+          margin-top : -30px;
+          padding : 10px;
+      }
+
+      /* 타이틀 스타일 */
+      hr {
+      margin-bottom : -5px;
+      }
+
+      h1 {
+          font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+          font-weight: bold;
+          font-color: #cccccc;
+          font-size: 14px; /* 제목 크기 줄임 */
+          margin-top: 10px;
+          margin-bottom: 5px;
+          font-weight: 600; /* 글씨 두껍게 */
+
+      }
+
+      /* div 호버 시 그림자 변화 */
+      .button-container div:hover {
+          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* 호버 시 그림자 강조 */
+      }

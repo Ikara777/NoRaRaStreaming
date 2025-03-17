@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${member.nickname} + '님의 방송국'">스트리머 방송국</title>
+  <link th:href="@{/css/streamRoom.css}" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+
+<div layout:fragment="content">
+  <div class="streamer-room">
+
+    <div class="sidebar">
+      <div class="streamer-profile">
+
+        <div class="profile-img-container">
+          <img th:if="${memberImg != null && memberImg.imgUrl != null}"
+               th:src="${memberImg.imgUrl}"
+               class="profile-img"
+               alt="스트리머 프로필">
+          <img th:unless="${memberImg != null && memberImg.imgUrl != null}"
+               src="/img/normalProfile.png"
+               class="normalProfile-img"
+               alt="기본 프로필">
+        </div>
+
+        <div class="streamer-name" th:text="${member.nickname}">스트리머 닉네임</div>
+      </div>
+
+      <div class="streamer-info">
+        <div class="info-item">
+          <span><i class="fas fa-users"></i>팔로워</span>
+          <span th:text="${followerCount}">0</span>
+        </div>
+      </div>
+
+      <form th:if="${isLoggedIn}"
+            th:action="${isFollowing ? '/api/unfollow/' + member.nickname : '/api/follow/' + member.nickname}"
+            method="post"
+            style="margin-top: 20px;">
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+        <button type="submit"
+                th:class="${isFollowing ? 'action-button followed' : 'action-button follow-button'}"
+                th:text="${isFollowing ? '팔로잉' : '팔로우'}">
+        </button>
+      </form>
+
+      <a th:if="${isLiveStreaming}"
+         th:href="@{'/api/streams/' + ${member.nickname}}"
+         class="action-button live-button">
+        실시간 방송 보기
+      </a>
+    </div>
+
+    <div class="main-content">
+      <h2 class="stream-title" th:text="${member.nickname} + '님의 방송'">방송 정보</h2>
+
+      <div class="stream-status">
+        <p th:if="${isLiveStreaming}" class="live-status">
+          실시간 방송 중
+        </p>
+        <p th:unless="${isLiveStreaming}" class="offline-status">
+          현재 방송 중이 아닙니다
+        </p>
+      </div>
+
+      <!-- 게시글 카드 표시 -->
+      <div class="container mt-4">
+        <div class="row">
+          <div th:each="post : ${board}" class="col-md-4 mb-4">
+            <a th:href="@{'/board/get/' + ${member.nickname} + '/' + ${post.id}}" class="card-link">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h5 class="card-title" th:text="${post.title}">게시글 제목</h5>
+                  <p class="card-text text-truncate" th:text="${post.message}">게시글 내용</p>
+                  <p class="card-text">
+                    <small class="text-muted" th:text="${#temporals.format(post.time, 'yyyy-MM-dd')}"></small>
+                  </p>
+                </div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <style>
+        .card {
+          transition: transform 0.2s;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .card-title {
+          font-size: 1.1rem;
+          font-weight: bold;
+          margin-bottom: 0.5rem;
+        }
+        .card-text {
+          color: #666;
+        }
+        .text-truncate {
+          max-height: 3.6em;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+        }
+        .card-link {
+          text-decoration: none;
+          color: inherit;
+        }
+        .card-link:hover {
+          text-decoration: none;
+          color: inherit;
+        }
+        .card-link:hover .card {
+          transform: translateY(-5px);
+          box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+      </style>
+    </div>
+  </div>
+</div>
+
+</html>

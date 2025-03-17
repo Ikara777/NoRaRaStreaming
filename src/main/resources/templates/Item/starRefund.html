@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<head>
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <link th:href="@{/css/starRefund.css}" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <title>스타캔디 환불</title>
+</head>
+
+<div layout:fragment="content">
+    <h2><i class="fas fa-coins"></i> 별사탕 환불 내역</h2>
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>결제 시간</th>
+                <th>후원한 스트리머</th>
+                <th>금액</th>
+                <th>메시지</th>
+                <th>상태</th>
+                <th>환불</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="rent : ${orders.content}">
+                <td th:text="${#temporals.format(rent.rentTime, 'yyyy-MM-dd HH:mm')}">결제 시간</td>
+                <td th:text="${rent.nickname}">후원한 스트리머</td>
+                <td th:text="${rent.rentAmount}">금액</td>
+                <td th:text="${rent.message}">메시지</td>
+                <td th:text="${rent.status}">상태</td>
+                <td>
+                    <form th:if="${rent.status.toString() != 'CANCEL' and rent.status.toString() != 'REFUND'}"
+                          th:action="@{/api/refund/process/star}" method="post">
+                        <input type="hidden" name="rentId" th:value="${rent.id}">
+                        <button type="submit" class="btn btn-danger">환불 요청</button>
+                    </form>
+
+                    <span th:if="${rent.status.toString() == 'CANCEL'}"
+                    class="badge bg-secondary">환불 완료</span>
+                    
+                    <span th:if="${rent.status.toString() == 'REFUND'}"
+                            class="badge bg-secondary">환전 완료</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- 페이징 처리 -->
+        <div th:with="start=${(orders.number/maxPage)*maxPage + 1},
+                     end=${(orders.totalPages == 0) ? 1 : (start + (maxPage-1) < orders.totalPages ?
+                     start + (maxPage - 1) : orders.totalPages)}">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" th:classappend="${orders.number eq 0}?'disabled':''">
+                    <a th:href="@{'/api/refund/star/' + ${orders.number - 1}}" class="page-link">
+                        <span>이전</span>
+                    </a>
+                </li>
+                <li class="page-item"
+                    th:each="page: ${#numbers.sequence(start, end)}"
+                    th:classappend="${orders.number eq page-1}?'active':''">
+                    <a th:href="@{'/api/refund/star/' + ${page-1}}"
+                       th:text="${page}" class="page-link"></a>
+                </li>
+                <li class="page-item" th:classappend="${orders.number+1 ge orders.totalPages}?'disabled':''">
+                    <a th:href="@{'/api/refund/star/' + ${orders.number + 1}}" class="page-link">
+                        <span>다음</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+</html>

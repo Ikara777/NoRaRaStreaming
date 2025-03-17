@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>후원 알림</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        .donation-alert {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* 이미지 크기 설정 추가 */
+        .alert-content img {
+            width: 400px;
+            height: 400px;
+            object-fit: contain;  /* 이미지 비율 유지 */
+        }
+
+       /* 메시지 스타일 추가 */
+        .alert-content h3 {
+            font-size: 32px;
+            font-weight: bold;
+            color: #FF6B6B;  /* 밝은 코랄 핑크 */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            margin: 20px 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            text-align: center;
+        }
+
+        .alert-content p {
+            font-size: 24px;
+            color: #FFFFFF;  /* 하얀색 */
+            margin: 10px 0;
+            font-family: 'Noto Sans KR', sans-serif;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* 애니메이션 효과 추가 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+
+    <!-- Google Fonts 추가 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
+
+
+</head>
+<body>
+<div id="donationAlert" class="donation-alert">
+    <!-- 후원 알림이 여기에 표시됨 -->
+</div>
+<script th:inline="javascript">
+    const nickname = [[${streamerNickname}]];
+    const donationSettings = [[${donationSettings}]];  // 변경된 속성 이름
+    let stompClient = null;
+
+    function findMatchingDonationSetting(amount) {
+        console.log('Finding setting for amount:', amount);
+        console.log('Available settings:', donationSettings);
+
+        if (!donationSettings || donationSettings.length === 0) {
+            return null;
+        }
+
+        // 금액 순으로 내림차순 정렬
+        const sortedSettings = [...donationSettings].sort((a, b) => b.amount - a.amount);
+        // 후원 금액 이하의 가장 높은 설정 찾기
+        return sortedSettings.find(setting => setting.amount <= amount);
+    }
+
+    function connect() {
+        const socket = new SockJS('/ws-chat');
+        stompClient = Stomp.over(socket);
+
+        stompClient.connect({}, function() {
+            console.log('Alert WebSocket Connected');
+
+            stompClient.subscribe(`/topic/donation/${nickname}`, function(message) {
+                console.log('Received donation:', message.body);
+                const donation = JSON.parse(message.body);
+                const setting = findMatchingDonationSetting(donation.amount);
+                console.log('Matched setting:', setting);
+                showDonationAlert(donation, setting);
+            });
+        });
+    }
+
+    function processMessageTemplate(template, donation) {
+    return template
+        .replace(/{닉네임}/g, donation.userNickname)
+        .replace(/{금액}/g, donation.amount);
+    }
+
+    function showDonationAlert(donation, setting) {
+        console.log('Showing alert with:', {donation, setting});
+        const alertDiv = document.getElementById('donationAlert');
+
+        // 도네이션 설정 메시지 템플릿 처리
+        const processedMessage = setting ? processMessageTemplate(setting.message, donation) : '';
+
+        alertDiv.innerHTML = `
+
+            <div class="alert-content">
+                ${setting && setting.imgUrl ? `<img src="${setting.imgUrl}" alt="후원 알림"/>` : ''}
+                <h3 style="color: ${setting?.headColor || '#FF6B6B'}">${processedMessage}</h3>
+                <p style="color: ${setting?.textColor || '#FFFFFF'}">${donation.message}</p>
+            </div>
+        `;
+
+        alertDiv.style.display = 'block';
+        setTimeout(() => {
+            alertDiv.style.display = 'none';
+        }, (setting ? setting.showTime : 5) * 1000);
+    }
+
+    // 페이지 로드 시 연결
+    connect();
+
+    // 디버깅용 로그
+    console.log('Initial settings:', donationSettings);
+</script>
+</body>
+</html>

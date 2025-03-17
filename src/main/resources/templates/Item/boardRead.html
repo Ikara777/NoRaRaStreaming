@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout1}">
+
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${member.nickname} + '님의 방송국'">스트리머 방송국</title>
+  <link th:href="@{/css/streamRoom.css}" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+</head>
+
+<div layout:fragment="content">
+  <div class="streamer-room">
+
+    <div class="sidebar">
+      <div class="streamer-profile">
+
+        <div class="profile-img-container">
+          <img th:if="${memberImg != null && memberImg.imgUrl != null}"
+               th:src="${memberImg.imgUrl}"
+               class="profile-img"
+               alt="스트리머 프로필">
+          <img th:unless="${memberImg != null && memberImg.imgUrl != null}"
+               src="/img/normalProfile.png"
+               class="normalProfile-img"
+               alt="기본 프로필">
+        </div>
+
+        <div class="streamer-name" th:text="${member.nickname}">스트리머 닉네임</div>
+      </div>
+
+      <div class="streamer-info">
+        <div class="info-item">
+          <span><i class="fas fa-users"></i>팔로워</span>
+          <span th:text="${followerCount}">0</span>
+        </div>
+      </div>
+
+      <form th:if="${isLoggedIn}"
+            th:action="${isFollowing ? '/api/unfollow/' + member.nickname : '/api/follow/' + member.nickname}"
+            method="post"
+            style="margin-top: 20px;">
+        <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+        <button type="submit"
+                th:class="${isFollowing ? 'action-button followed' : 'action-button follow-button'}"
+                th:text="${isFollowing ? '팔로잉' : '팔로우'}">
+        </button>
+      </form>
+
+      <a th:if="${isLiveStreaming}"
+         th:href="@{'/api/streams/' + ${member.nickname}}"
+         class="action-button live-button">
+        실시간 방송 보기
+      </a>
+    </div>
+
+    <div class="main-content">
+
+      <h2 class="stream-title" th:text="${Border.title}">게시글 제목</h2>
+      <div class="container mt-4">
+          <p class="author" th:text="'작성자: ' + ${Border.nickname}">작성자</p>
+          <div class="content-box">
+            <p th:text="${Border.message}">게시글 내용</p>
+          </div>
+
+        <div class="button-container">
+
+        <a th:href="@{'/stream/live/' + ${member.nickname}}" class="board-list-button">목록</a>
+        <a th:href="@{'/board/refund/'+${Border.nickname}+'/'+${Border.Id}}" class="board-list-button">수정</a>
+        <a th:href="@{'/board/new/'+${Border.nickname}}" class="board-list-button">글작성</a>
+
+        </div>
+
+      </div>
+
+      <style>
+        .board-list-button{
+            width: auto;
+            padding: 10px 20px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+        }
+        .button-container {
+            text-align: right; /* 오른쪽 정렬 */
+            width: 100%;
+        }
+
+        .board-list {
+          background: #fff;
+          padding: 2rem;
+          border-radius: 8px;
+        }
+
+        .board-detail h3 {
+          margin-bottom: 1rem;
+          color: #333;
+        }
+
+        .author {
+          color: #666;
+          margin-bottom: 1.5rem;
+        }
+
+        .content-box {
+          background: #f8f9fa;
+          padding: 1.5rem;
+          border-radius: 4px;
+          min-height: 200px;
+        }
+      </style>
+    </div>
+
+  </div>
+</div>
+
+</html>
