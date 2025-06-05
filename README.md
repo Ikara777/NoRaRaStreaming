@@ -3,7 +3,7 @@
 
 ## Nginx + SpringBoot를 활용한 생방송 스트리밍 플랫폼
 사이트 도메인 주소
-http://norarastream.duckdns.org/
+https://norarastream.duckdns.org/
 
 **"그림으로 채우는 나만의 공간"**
 실시간 스트리밍 사이트의 영향력은 점차 커지고 있지만 사이트 구축과
@@ -51,6 +51,7 @@ http://norarastream.duckdns.org/
  - Docker 컨테이너 테스트
  - Ngrok을 통한 외부 접속 테스트
  - AWS EC2 클라우드 서버 배포
+ - SSL 인증서를 활용한 HTTPS 배포
  
 
 ## 🛠 주요 기능
