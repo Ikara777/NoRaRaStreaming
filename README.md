@@ -4,7 +4,6 @@
 ## Nginx + SpringBoot를 활용한 생방송 스트리밍 플랫폼
 사이트 도메인 주소
 https://norarastream.duckdns.org/
-https://www.notion.so/19077b027a3380da8e33c14b275b7550
 **"그림으로 채우는 나만의 공간"**
 실시간 스트리밍 사이트의 영향력은 점차 커지고 있지만 사이트 구축과
 서버 관리만으로 큰 비용이 발생하기 때문에 직접 사이트를 제작하여
